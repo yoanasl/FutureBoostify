@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Transactional
 @Service
 @AllArgsConstructor
@@ -18,33 +20,65 @@ public class CampaignServiceImpl implements CampaignService {
 
     private ModelMapper modelMapper;
     private CampaignRepository campaignRepository;
-
     @Override
     public Campaign createCampaign(CampaignDTO campaignDto) {
-        return null;
+        Campaign newCampaign = convertDtoToEntity(campaignDto);
+        return campaignRepository.save(newCampaign);
     }
 
     @Override
-    public Campaign getCampaignById(Long campaignId) {
-        return campaignRepository.findById(campaignId)
-                .orElseThrow(() -> new EntityNotFoundException("Campaign not found with id: " + campaignId));
-    }
-
-    @Override
-    public void updateCampaign(Long campaignId, CampaignDTO campaignDto) {
+    public Optional<Campaign> updateCampaign(Long campaignId, CampaignDTO campaignDto) {
         Campaign existingCampaign = campaignRepository.findById(campaignId)
                 .orElseThrow(() -> new EntityNotFoundException("Campaign not found with id: " + campaignId));
 
-        existingCampaign.setTitle(campaignDto.getTitle());
-        existingCampaign.setDescription(campaignDto.getDescription());
-        // Update other fields as needed
+        if (campaignDto.getTitle() == null || !campaignDto.getTitle().isEmpty()) {
+            existingCampaign.setTitle(campaignDto.getTitle());
+        }
+        if (campaignDto.getDescription() != null || !campaignDto.getDescription().isEmpty()) {
+            existingCampaign.setDescription(campaignDto.getDescription());
+        }
+        if (campaignDto.isGroupCampaign()) {
+            existingCampaign.setGroupCampaign(campaignDto.isGroupCampaign());
+        }
+        if (campaignDto.getStatus() != null || !campaignDto.getStatus().isEmpty()) {
+            existingCampaign.setStatus(campaignDto.getStatus());
+        }
+        if (campaignDto.getGoal() != null ) {
+            existingCampaign.setGoal(campaignDto.getGoal());
+        }
+        if (campaignDto.getCurrentAmount() != null ) {
+            existingCampaign.setCurrentAmount(campaignDto.getCurrentAmount());
+        }
+        if (campaignDto.getStartDate() != null ) {
+            existingCampaign.setStartDate(campaignDto.getStartDate());
+        }
+        if (campaignDto.getEndDate() != null ) {
+            existingCampaign.setEndDate(campaignDto.getEndDate());
+        }
+        //todo fix
+        if (campaignDto.getMediaFiles() != null ) {
+            existingCampaign.setEndDate(campaignDto.getEndDate());
+        }
 
+        if (campaignDto.getType() != null ) {
+            existingCampaign.setType(campaignDto.getType());
+        }
+        if (campaignDto.getLocation() != null || !campaignDto.getLocation().isEmpty()) {
+            existingCampaign.setLocation(campaignDto.getLocation());
+        }
+        if (campaignDto.getPaymentMethods() != null ) {
+            existingCampaign.setPaymentMethods(campaignDto.getPaymentMethods());
+        }
         campaignRepository.save(existingCampaign);
+        return Optional.of(existingCampaign);
     }
 
     @Override
     public void deleteCampaign(Long campaignId) {
-        campaignRepository.deleteById(campaignId);
+        Campaign existingCampaign = campaignRepository.findById(campaignId)
+                .orElseThrow(() -> new EntityNotFoundException("Campaign not found with id: " + campaignId));
+
+        campaignRepository.deleteById(existingCampaign.getId());
     }
 
 
