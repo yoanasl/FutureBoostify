@@ -1,11 +1,10 @@
 package com.futureboost.FutureBoostify.repository;
 
-import com.futureboost.FutureBoostify.model.Payment;
-import com.futureboost.FutureBoostify.model.User;
+import com.futureboost.FutureBoostify.model.Service;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
 
-public interface PaymentRepository  extends JpaRepository<Payment, Long>  {
+public interface ServiceRepository extends JpaRepository<Service, Long > {
 }

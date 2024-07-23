@@ -6,27 +6,28 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "campaign_contributions")
 public class CampaignContribution {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "campaign_id", nullable = false)
     private Campaign campaign;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
-    private BigDecimal amount;
+    private Double amount;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    @ManyToOne
+    @JoinColumn(name = "service_id")
+    private Service service;
 
-    @Column(name = "payment_method")
-    private String paymentMethod;
+    @ManyToOne
+    @JoinColumn(name = "sub_campaign_id")
+    private SubCampaign subCampaign;
 
-    // Constructors, getters, and setters
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 }

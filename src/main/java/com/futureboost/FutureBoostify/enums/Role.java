@@ -32,7 +32,7 @@ and interact with creators through comments and messages.
 public enum Role {
     USER("User"),
     CAMPAIGN_CREATOR("Campaign Creator"),
-    CAMPAIGN_SUPPORTER("Campaign Supporter"),
+    CONTRIBUTOR("Campaign Supporter"),
     ADMIN("Administrator");
 
     private final String roleName;

@@ -17,7 +17,7 @@ public interface CampaignService {
      * @return The created Campaign object.
      */
     @Transactional
-    Campaign createCampaign(@Valid CampaignDTO campaignDto);
+    CampaignDTO createCampaign(@Valid CampaignDTO campaignDto);
 
 
     /**

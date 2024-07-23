@@ -23,8 +23,8 @@ public class Rating {
     @Column(nullable = false)
     private Integer rating;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     // Constructors, getters, and setters
 }
