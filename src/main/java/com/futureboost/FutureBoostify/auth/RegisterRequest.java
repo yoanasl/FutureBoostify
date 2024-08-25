@@ -1,6 +1,9 @@
 package com.futureboost.FutureBoostify.auth;
 
+import com.futureboost.FutureBoostify.enums.Role;
 import lombok.*;
+
+import java.util.Set;
 
 @Data
 @Builder
@@ -11,5 +14,7 @@ public class RegisterRequest {
     private String lastName;
     private String email;
     private String password;
+    private Set<Role> roles;
+
 
 }

@@ -16,4 +16,7 @@ public interface CampaignRepository extends JpaRepository<Campaign, Long> {
      * @return The Campaign object corresponding to the ID.
      */
     Optional<Campaign> getCampaignsById(Long campaignId) throws CampaignNotFoundException;
+    Optional<Campaign> getCampaignByTitle(String title) throws CampaignNotFoundException;
+    boolean existsByTitle(String title);
+
 }

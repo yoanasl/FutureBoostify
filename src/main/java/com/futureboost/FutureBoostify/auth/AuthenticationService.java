@@ -11,10 +11,13 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @AllArgsConstructor
@@ -28,10 +31,11 @@ public class AuthenticationService {
     //login
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         // if username or password is not correct the exception will be thrown
+        User user = repository.findAllByEmail(request.getEmail()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 request.getEmail(),
                 request.getPassword()));
-        User user = repository.findAllByEmail(request.getEmail()).orElseThrow();
+
         repository.save(user);
         var jwtToken = jwtService.generateToken(user);
         return AuthenticationResponse.builder()
@@ -46,17 +50,18 @@ public class AuthenticationService {
         if (repository.findAllByEmail(request.getEmail()).isPresent()) {
             throw new IllegalStateException("User already exists with email: " + request.getEmail());
         }
+        Set<Role> roles = request.getRoles();
+        System.out.println(roles);
+        if (roles.contains(Role.ADMIN)) {
+            throw new IllegalArgumentException("Cannot assign admin role");
+        }
         var user = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER)
+                .roles(roles)
                 .build();
-        if (request.getEmail().contains("admin")) {
-            user.setRole(Role.ADMIN);
-        }
-
         repository.save(user);
         var jwtToken = jwtService.generateToken(user);
         return AuthenticationResponse.builder()
@@ -64,11 +69,27 @@ public class AuthenticationService {
                 .build();
     }
 
+
     @PostConstruct
     public void registerAdmin() {
         if (repository.findAllByEmail("admin@abv.bg").isEmpty()) {
-            var request = new RegisterRequest("Admin", "Admin", "admin@abv.bg", "admin");
-            register(request);
+            Set<Role> adminRoles = new HashSet<>();
+            adminRoles.add(Role.ADMIN);
+
+            RegisterRequest request = new RegisterRequest(
+                    "Admin",
+                    "Admin",
+                    "admin@abv.bg",
+                    "admin",
+                    adminRoles
+            );
+
+            User user = new User();
+            user.setEmail(request.getEmail());
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+            user.setRoles(request.getRoles());
+
+            repository.save(user);
         }
     }
 
@@ -83,6 +104,7 @@ public class AuthenticationService {
         // If user exists, return it. Otherwise, throw an exception.
         return optionalUser.orElseThrow(() -> new IllegalStateException("Current user not found"));
     }
+
     public AuthenticationResponse logout(String token) {
         String invalidatedToken = jwtService.generateToken(token);
 //
@@ -95,6 +117,17 @@ public class AuthenticationService {
     }
 }
 
+/*
+*
+* function logout() {
+    // Remove the JWT token from local storage or cookies
+    localStorage.removeItem('token'); // Or delete the cookie if stored in a cookie
 
+    // Redirect to the login page or homepage
+    window.location.href = '/login';
+}
+
+*
+* */
 
 

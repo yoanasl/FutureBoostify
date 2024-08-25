@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class SubCampaignServiceImpl implements SubCampaignService {
@@ -18,7 +20,7 @@ public class SubCampaignServiceImpl implements SubCampaignService {
     private final SubCampaignRepository subCampaignRepository;
     @Override
     @Transactional
-    public SubCampaignDTO createSubCampaign(SubCampaignDTO subCampaignDTO) {
+    public SubCampaignDTO createSubCampaign(List<SubCampaignDTO> subCampaignDTO) {
         if(subCampaignDTO == null){
             throw new IllegalArgumentException("SubCampaignDTO cannot be null");
         }
@@ -34,13 +36,18 @@ public class SubCampaignServiceImpl implements SubCampaignService {
     }
 
     @Override
+    public SubCampaignDTO saveSubCampaign(List<SubCampaignDTO> subCampaignDTO) {
+        return null;
+    }
+
+    @Override
+    @Transactional
     public SubCampaign createSubCampaignObject(SubCampaignDTO subCampaignDTO) {
         if(subCampaignDTO == null){
             throw new IllegalArgumentException("SubCampaignDTO cannot be null");
         }
         SubCampaign subCampaign = modelMapper.map(subCampaignDTO, SubCampaign.class);
         try {
-
               subCampaignRepository.save(subCampaign);
             log.info("New sub-campaign created with ID: {}", subCampaign.getId());
             return subCampaign;

@@ -4,8 +4,10 @@ import com.futureboost.FutureBoostify.dto.CampaignDTO;
 import com.futureboost.FutureBoostify.exception.CampaignNotFoundException;
 import com.futureboost.FutureBoostify.model.Campaign;
 import jakarta.transaction.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.util.List;
 import java.util.Optional;
 
 public interface CampaignService {
@@ -17,7 +19,7 @@ public interface CampaignService {
      * @return The created Campaign object.
      */
     @Transactional
-    CampaignDTO createCampaign(@Valid CampaignDTO campaignDto);
+    CampaignDTO createCampaign(@Valid CampaignDTO campaignDto, List<MultipartFile> mediaFiles);
 
 
     /**

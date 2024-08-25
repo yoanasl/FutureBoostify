@@ -46,7 +46,10 @@ public class SecurityConfiguration {
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout((logout) -> logout
-                        .logoutSuccessUrl("/api/v1/auth/logout")
+                        .logoutUrl("/api/auth/logout") // The URL to trigger logout
+                        .logoutSuccessUrl("/login?logout") // Redirect or return response after logout
+                        .invalidateHttpSession(true) // Invalidate the session
+                        .deleteCookies("JSESSIONID") // Delete the session cookie
                         .permitAll())
         ;
 

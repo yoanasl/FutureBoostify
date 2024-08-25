@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -15,6 +16,6 @@ public class SubCampaignDTO {
     private Long campaignId;
     private String title;
     private String description;
-    private Integer goal;
-    private Integer currentAmount;
+    private BigDecimal goal;
+    private BigDecimal currentAmount;
 }

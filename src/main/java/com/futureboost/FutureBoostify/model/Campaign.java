@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -47,14 +48,14 @@ public class Campaign {
     private BigDecimal  goal;
 
 
-    @Column(name = "current_amount", nullable = false)
+    @Column(name = "current_amount")
     private BigDecimal currentAmount = BigDecimal.valueOf(0.0);
 
     @Column(name = "start_date", nullable = false)
-    private LocalDateTime startDate;
+    private Date startDate;
 
     @Column(name = "end_date", nullable = false)
-    private LocalDateTime endDate;
+    private Date endDate;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -62,8 +63,10 @@ public class Campaign {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @Column(columnDefinition = "jsonb")
-    private String mediaFiles;
+
+//    @CollectionTable(name = "campaign_media_files", joinColumns = @JoinColumn(name = "campaign_id"))
+    @Column(name = "media_file")
+    private List<String> mediaFiles;
 
     @Column(nullable = false)
     private String location;
@@ -82,14 +85,16 @@ public class Campaign {
     @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Comment> comments;
 
-    @OneToMany(mappedBy = "parentCampaign", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<SubCampaign> subCampaigns;
 
     @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<CampaignContribution> contributions;
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
     }
 
     @PreUpdate
@@ -98,4 +103,5 @@ public class Campaign {
     }
 
     // Constructors, getters, and setters
+
 }

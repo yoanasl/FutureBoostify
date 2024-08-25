@@ -12,6 +12,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -55,24 +57,24 @@ public class AuthenticationController {
         }
     }
 
-    @PostMapping("/api/v1/auth/logout")
-    public ResponseEntity<AuthenticationResponse> logout(HttpServletRequest request, HttpServletResponse servletResponse) {
-        final String authHeader = request.getHeader("Authorization");
-        ;
-        if (authHeader == null || !authHeader.startsWith("Bearer ") ||
-            tokenBlacklistService.isBlacklisted(authHeader)) {
-            // If there is no Authorization header or it doesn't start with "Bearer ",
-            // you can handle it according to your application's requirements.
-            // For example, you could return a ResponseEntity with an appropriate status code.
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new AuthenticationResponse("Unauthorized"));
-        }
-
-        setCookieToken(servletResponse, "",0);
-        tokenBlacklistService.addToBlacklist(authHeader);
-
-        // Return ResponseEntity indicating successful logout
-        return ResponseEntity.ok(new AuthenticationResponse("Logged out successfully"));
-    }
+//    @PostMapping("/api/v1/auth/logout")
+//    public ResponseEntity<AuthenticationResponse> logout(HttpServletRequest request, HttpServletResponse servletResponse) {
+//        final String authHeader = request.getHeader("Authorization");
+//        ;
+//        if (authHeader == null || !authHeader.startsWith("Bearer ") ||
+//            tokenBlacklistService.isBlacklisted(authHeader)) {
+//            // If there is no Authorization header or it doesn't start with "Bearer ",
+//            // you can handle it according to your application's requirements.
+//            // For example, you could return a ResponseEntity with an appropriate status code.
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new AuthenticationResponse("Unauthorized"));
+//        }
+//
+//        setCookieToken(servletResponse, "",0);
+//        tokenBlacklistService.addToBlacklist(authHeader);
+//
+//        // Return ResponseEntity indicating successful logout
+//        return ResponseEntity.ok(new AuthenticationResponse("Logged out successfully"));
+//    }
 
 
     private void setCookieToken(HttpServletResponse response, String jwtToken, long maxAge) {
@@ -84,6 +86,16 @@ public class AuthenticationController {
                 .sameSite("Strict") // Adjust this based on your requirements
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    }
+
+    @PostMapping("/logout")
+    public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
+        try {
+            request.logout();
+        } catch (Exception e) {
+        }
+
+        SecurityContextHolder.clearContext();
     }
     @GetMapping("/api/v1/auth/admin/users")
     public ResponseEntity<List<User>> getAll(){

@@ -3,55 +3,98 @@ package com.futureboost.FutureBoostify.service;
 import com.futureboost.FutureBoostify.auth.AuthenticationService;
 import com.futureboost.FutureBoostify.dto.CampaignDTO;
 import com.futureboost.FutureBoostify.enums.CampaignStatus;
+import com.futureboost.FutureBoostify.exception.FileStorageException;
 import com.futureboost.FutureBoostify.model.Campaign;
+import com.futureboost.FutureBoostify.model.SubCampaign;
+import com.futureboost.FutureBoostify.model.User;
 import com.futureboost.FutureBoostify.repository.CampaignRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.Authentication;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Transactional
 @Service
 @AllArgsConstructor
-@RequiredArgsConstructor
-public class CampaignServiceImpl implements CampaignService {
 
+public class CampaignServiceImpl implements CampaignService {
+    @Autowired
     private ModelMapper modelMapper;
-    private CampaignRepository campaignRepository;
+    @Autowired
+    private  CampaignRepository campaignRepository;
+    @Autowired
     private SubCampaignService subCampaignService;
+    @Autowired
     private AuthenticationService authenticationService;
+    @Autowired
+    private FileStorageService fileStorageService;
+    private UserDetailsService userDetailsService;
+
     private static final Logger log = LoggerFactory.getLogger(CampaignService.class);
 
+    //todo check if campaign exist
     @Override
     @Transactional
-    public CampaignDTO createCampaign(CampaignDTO campaignDto) {
-        Campaign newCampaign = convertDtoToEntity(campaignDto);
+    public CampaignDTO createCampaign(CampaignDTO campaignDTO, List<MultipartFile> mediaFiles) {
+        if (campaignRepository.existsByTitle(campaignDTO.getTitle())) {
+            throw new IllegalArgumentException("Campaign with this title already exists.");
+        }
 
-//        if (campaignDto.getUserId() != null) {
-//            User user = userRepository.findById(campaignDto.getUserId())
-//                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
-//            newCampaign.setUser(user);
-//        } else {
-//            throw new IllegalArgumentException("User ID cannot be null");
+        Campaign newCampaign = Campaign.builder()
+                .title(campaignDTO.getTitle())
+                .description(campaignDTO.getDescription())
+                .user(authenticationService.getCurrentUser())
+                .type(campaignDTO.getType())
+                .status(CampaignStatus.ACTIVE) //todo if your want it can be inactive ...
+                .goal(campaignDTO.getGoal())
+                .currentAmount(BigDecimal.ZERO)
+                .startDate(campaignDTO.getStartDate())
+                .endDate(campaignDTO.getEndDate())
+                .location(campaignDTO.getLocation())
+                .build();
+
+        if (mediaFiles != null && !mediaFiles.isEmpty()) {
+            List<String> mediaFilePaths = mediaFiles.stream()
+                    .map(fileStorageService::storeFile)
+                    .collect(Collectors.toList());
+            newCampaign.setMediaFiles(mediaFilePaths);
+        }
+// todo when payment methods exit
+//        if (campaignDTO.getPaymentMethodIds() != null && !campaignDTO.getPaymentMethodIds().isEmpty()) {
+//            List<PaymentMethod> paymentMethods = paymentMethodRepository.findAllById(campaignDTO.getPaymentMethodIds());
+//            newCampaign.setPaymentMethods(paymentMethods);
 //        }
+
+        if (campaignDTO.getSubCampaigns() != null && !campaignDTO.getSubCampaigns().isEmpty()) {
+            List<SubCampaign> subCampaigns = campaignDTO.getSubCampaigns().stream()
+                    .map(subCampaignDTO -> SubCampaign.builder()
+                            .title(subCampaignDTO.getTitle())
+                            .description(subCampaignDTO.getDescription())
+                            .goal(subCampaignDTO.getGoal())
+                            .currentAmount(BigDecimal.ZERO)
+                            .campaign(newCampaign)
+                            .build())
+                    .collect(Collectors.toList());
+            newCampaign.setSubCampaigns(subCampaigns);
+        }
 
         Campaign savedCampaign = campaignRepository.save(newCampaign);
 
-        if (savedCampaign != null && savedCampaign.getId() != null) {
-            log.info("Campaign created successfully with ID: {}", savedCampaign.getId());
-            return convertEntityToDto(savedCampaign);
-        } else {
-            log.error("Failed to create the campaign");
-            throw new RuntimeException("Failed to create the campaign");
-        }
+        return convertEntityToDto(savedCampaign);
     }
     private CampaignDTO convertEntityToDto(Campaign campaign) {
         return modelMapper.map(campaign, CampaignDTO.class);
@@ -87,9 +130,9 @@ public class CampaignServiceImpl implements CampaignService {
             existingCampaign.setEndDate(campaignDto.getEndDate());
         }
         //todo fix
-        if (campaignDto.getMediaFiles() != null) {
-            existingCampaign.setEndDate(campaignDto.getEndDate());
-        }
+//        if (campaignDto.getMediaFiles() != null) {
+//            existingCampaign.setEndDate(campaignDto.getEndDate());
+//        }
 
         if (campaignDto.getType() != null) {
             existingCampaign.setType(campaignDto.getType());
@@ -114,6 +157,7 @@ public class CampaignServiceImpl implements CampaignService {
 
 
     private Campaign convertDtoToEntity(CampaignDTO campaignDto) {
+
         Campaign campaign = Campaign.builder()
                 .title(campaignDto.getTitle())
                 .description(campaignDto.getDescription())
@@ -122,15 +166,14 @@ public class CampaignServiceImpl implements CampaignService {
                 .type(campaignDto.getType())
                 .status(CampaignStatus.ACTIVE)
                 .goal(campaignDto.getGoal())
-                .currentAmount(campaignDto.getCurrentAmount())
+//                .currentAmount(campaignDto.getCurrentAmount())
                 .startDate(campaignDto.getStartDate())
                 .endDate(campaignDto.getEndDate())
-//                .mediaFiles(campaignDto.getMediaFiles())
                 .location(campaignDto.getLocation())
 //                .paymentMethods(findById)
-                .subCampaigns(campaignDto.getSubCampaigns().stream().map(camp
-                        -> subCampaignService.createSubCampaignObject(camp)).toList())
+
                 .build();
+
 
         return campaign;
 
